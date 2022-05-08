@@ -1,31 +1,35 @@
-def basic_algo(var, gap_penalty, cost_dict):
-    with open(f"SampleTestCases/input{var}.txt") as fp: # load file
-        x = fp.read().split()                           # split input buffer into lines
+import helper_3 as helper
+import sys
+import time
 
-    final_str = []                                      # stores the final strings
-    base_str = list(x[0])                               # start with first string
+def basic_algo(filename, gap_penalty, cost_dict):
+    with open(filename) as fp:                                  # load file
+        x = fp.read().split()                                   # split input buffer into lines
 
-    for i in x[1:] + ["end"]:                           # start from 2nd line in the file
+    final_str = []                                              # stores the final strings
+    base_str = list(x[0])                                       # start with first string
+
+    for i in x[1:] + ["end"]:                                   # start from 2nd line in the file
 
         if i.isdigit():
             k = int(i)
             base_str = base_str[:k+1] + base_str + base_str[k+1:]
         else:
-            final_str.append("".join(base_str))         # end will make sure that both strings are appended
+            final_str.append("".join(base_str))                 # end will make sure that both strings are appended
             base_str = i
 
-    X, Y = final_str                                    # modified final strings
+    X, Y = final_str                                            # modified final strings
 
     lenX = len(X) + 1
     lenY = len(Y) + 1
 
     # optimal value
-    OPT = [[0] * lenY for _ in range(lenX)]             # OPT matrix
+    OPT = [[0] * lenY for _ in range(lenX)]                     # OPT matrix
 
-    for i in range(1, lenX):                            # col init
+    for i in range(1, lenX):                                    # col init
         OPT[i][0] = i * gap_penalty
 
-    for j in range(1, lenY):                            # row init
+    for j in range(1, lenY):                                    # row init
         OPT[0][j] = j * gap_penalty
 
     for i in range(1, lenX):
@@ -37,8 +41,8 @@ def basic_algo(var, gap_penalty, cost_dict):
     i = lenX - 1
     j = lenY - 1
 
-    X_new = list(X)                                     # list of original X
-    Y_new = list(Y)                                     # list of original Y
+    X_new = list(X)                                             # list of original X
+    Y_new = list(Y)                                             # list of original Y
 
     while i > 0 and j > 0:
         key = "".join(sorted([X[i - 1], Y[j - 1]]))
@@ -55,7 +59,6 @@ def basic_algo(var, gap_penalty, cost_dict):
 
 
     # when either i or j is 0, append '_' at the start of opposite string
-
     while i > 0:
         Y_new.insert(0, "_")
         i -= 1
@@ -68,15 +71,14 @@ def basic_algo(var, gap_penalty, cost_dict):
 
 
 if __name__ == "__main__":
-    gap_penalty = 30
+    if len(sys.argv) < 2:
+        print("Usage: python3 <filename.py> <input.txt>")
+        sys.exit()
 
-    # string substitution dictionary
-    cost_dict = {"AC": 110, "AG": 48, "AT": 94, "CG": 118, "CT": 48, "GT": 110, "AA": 0, "CC": 0, "GG": 0, "TT": 0,
-                 "CA":110, "GA": 48, "TA": 94, "GC": 118, "TC": 48, "TG": 110}
+    start_time = time.time()
+    cost, X, Y = basic_algo(sys.argv[1], helper.gap_penalty, helper.cost_dict)
+    print("Cost from input file " + sys.argv[1] + ":", f"{cost}")
 
-    for i in range(1, 6):
-        leng, X, Y = basic_algo(i, gap_penalty, cost_dict)
-        print(i)
-        with open(f"SampleTestCases/output{i}.txt", 'r') as fp:
-            leng1, X1, Y1 = fp.read().split()[:3]
-        print(f"length->{leng}", leng == int(leng1), X == X1, Y == Y1)
+    # Code for output file
+    time_taken, mem = helper.calculate_time_mem(start_time)
+    helper.create_output_file(sys.argv[2], start_time, cost, X, Y, time_taken, mem)

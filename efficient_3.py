@@ -1,12 +1,10 @@
-#from resource import *
+import helper_3 as helper
+import sys
 import time
-import psutil
-import os
-import gc
 
 def get_input(file_name):
   with open(file_name) as fp: # load file
-    x = fp.read().split()                           # split input buffer into lines
+    x = fp.read().split()                             # split input buffer into lines
 
   final_str = []                                      # stores the final strings
   base_str = list(x[0])                               # start with first string
@@ -16,35 +14,35 @@ def get_input(file_name):
       k = int(i)
       base_str = base_str[:k+1] + base_str + base_str[k+1:]
     else:
-      final_str.append("".join(base_str))         # end will make sure that both strings are appended
+      final_str.append("".join(base_str))             # end will make sure that both strings are appended
       base_str = i
 
   X, Y = final_str                                    # modified final strings
   return X, Y
 
-def Cost(s1,s2):
+def calculate_cost(s1,s2):
   lenX = len(s1)+1
   lenY = len(s2)+1
   OPT = [0]*(lenY)
   for i in range(lenY):
-    OPT[i] = i*gap_penalty
+    OPT[i] = i* helper.gap_penalty
   for i in range(1,lenX):
     temp = [0] * (lenY)
-    temp[0] = i * gap_penalty
+    temp[0] = i * helper.gap_penalty
     for j in range(1, lenY):
        key = "".join([s1[i - 1], s2[j - 1]])
-       MIN_Value = min(OPT[j-1]+cost_dict[key],OPT[j]+gap_penalty,temp[j-1]+gap_penalty)
+       MIN_Value = min(OPT[j-1]+helper.cost_dict[key],OPT[j] + helper.gap_penalty, temp[j-1] + helper.gap_penalty)
        temp[j] = MIN_Value
     OPT = temp
   return OPT
 
-def getOPTpoint(leftx,rightx,y):
+def get_OPT_point(leftx,rightx,y):
   lenY = len(y)+1
-  left = Cost(leftx,y)
+  left = calculate_cost(leftx,y)
   #print("Cost_DP = ",left)
   rightx_rev = "".join(reversed(rightx))
   y_rev = "".join(reversed(y))
-  right = Cost(rightx_rev,y_rev)
+  right = calculate_cost(rightx_rev,y_rev)
   MIN = float('inf')
   MIN_INDEX = -1
   for i in range(lenY):
@@ -73,11 +71,11 @@ def DC(X,Y):
     return X,temp
   if (len(X)==1):
     MIN = -1
-    MIN_Value = (len(Y)+1)*gap_penalty
+    MIN_Value = (len(Y)+1) * helper.gap_penalty
     for i in range(len(Y)):
       key = "".join([X[0], Y[i]])
-      cost = cost_dict[key]
-      total_cost = cost + (len(Y)-1)*gap_penalty
+      cost = helper.cost_dict[key]
+      total_cost = cost + (len(Y)-1) * helper.gap_penalty
       if(total_cost<MIN_Value):
         MIN_Value=total_cost
         MIN = i
@@ -108,7 +106,7 @@ def DC(X,Y):
   #print("xl =",leftx)
   #print("xr=",rightx)
   #print("y=",y)
-  optpoint = getOPTpoint(leftx,rightx,y)
+  optpoint = get_OPT_point(leftx,rightx,y)
   #print("opt=",optpoint)
   ans1 = DC(leftx,y[0:optpoint])
   ans2 = DC(rightx,y[optpoint:])
@@ -116,7 +114,7 @@ def DC(X,Y):
   result_string2 = ans1[1]+ans2[1]
   return result_string1, result_string2
 
-def get_Cost(str1,str2):
+def get_cost(str1,str2):
   cost = 0
 
   for i in range(len(str1)):
@@ -127,58 +125,27 @@ def get_Cost(str1,str2):
       cost+=30
     else:
       key = "".join([c1, c2])
-      cost+=cost_dict[key]
+      cost+=helper.cost_dict[key]
 
   return cost
-
 
 def space_efficient(filename):
 
   X,Y = get_input(filename)
   str1,str2 = DC(X,Y)
-  cost = get_Cost(str1,str2)
+  cost = get_cost(str1,str2)
   return cost, str1, str2
 
-
-def process_memory():                                  # memory calculation
-  process = psutil.Process(os.getpid())
-  memory_info = process.memory_info()
-  memory_consumed = int(memory_info.rss/1024)
-  return memory_consumed
-
 if __name__ == "__main__":
-    global gap_penalty
-    gap_penalty = 30
-
-    # string substitution dictionary
-    global cost_dict
-    cost_dict = {"AC": 110, "AG": 48, "AT": 94, "CG": 118, "CT": 48, "GT": 110, "AA": 0, "CC": 0, "GG": 0, "TT": 0,
-                 "CA":110, "GA": 48, "TA": 94, "GC": 118, "TC": 48, "TG": 110}
-
-    # for i in range(1, 6):
-    #     leng, X, Y = space_efficient(f"SampleTestCases/input{i}.txt", gap_penalty, cost_dict)
-    #     print(i)
-    #     print("X=",X,"Y=",Y)
-    #     with open(f"SampleTestCases/output{i}.txt", 'r') as fp:
-    #         leng1, X1, Y1 = fp.read().split()[:3]
-    #     print(f"length->{leng}", leng == int(leng1), X == X1, Y == Y1)
+    if len(sys.argv) < 2:
+        print("Usage: python3 <filename.py> <input.txt>")
+        sys.exit()
 
     l = []
-    for i in range(1, 16):
-      # start_time = time.time()
-      leng, X, Y = space_efficient(f"datapoints/in{i}.txt")
-      print(leng)
-      # mem = process_memory()                              # memory calculation
-      # end_time = time.time()
-      # time_taken = (end_time - start_time)*1000
-      # print(time_taken)
-      # print(mem)
+    start_time = time.time()
+    cost, X, Y = space_efficient(sys.argv[1])
+    print("Cost from input file" + sys.argv[1] + ":", cost)
 
-  # with open(f"datapoints/out{i}", 'w') as fp:     # to write to file
-  #   fp.write(str(leng) +"\n")
-  #   fp.write(X + "\n")
-  #   fp.write(Y + "\n")
-  #   fp.write(f"{mem}\n")
-  #   fp.write(f"{time_taken}\n")
-
-
+    # Code for output file
+    time_taken, mem = helper.calculate_time_mem(start_time)
+    helper.create_output_file(sys.argv[2], start_time, cost, X, Y, time_taken, mem)
