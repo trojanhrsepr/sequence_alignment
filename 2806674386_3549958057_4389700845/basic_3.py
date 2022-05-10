@@ -16,7 +16,7 @@ class helper_3:
     def process_memory(self):                                
         process = psutil.Process(os.getpid())
         memory_info = process.memory_info()
-        memory_consumed = int(memory_info.rss/1000)
+        memory_consumed = int(memory_info.rss/1024)
         return memory_consumed
 
     # Calculates time taken and memory utilization
